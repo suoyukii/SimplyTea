@@ -54,3 +54,4 @@ options.txt
 /resources/assets/unused
 /design
 /*.launch
+src/generated/resources/.cache/
