@@ -37,7 +37,7 @@ public class AddEntryLootModifier extends LootModifier {
 				return DataResult.success(entry);
 			}catch(JsonSyntaxException e) {
 				LootModifierManager.LOGGER.warn("Unable to decode entry", e);
-				return DataResult.error(e.getMessage());
+				return DataResult.error(() -> e.getMessage());
 			}
 		},
 		entry -> {
@@ -46,7 +46,7 @@ public class AddEntryLootModifier extends LootModifier {
 				return DataResult.success(new Dynamic<>(JsonOps.INSTANCE, element));
 			}catch(JsonSyntaxException e) {
 				LootModifierManager.LOGGER.warn("Unable to encode entry", e);
-				return DataResult.error(e.getMessage());
+				return DataResult.error(() -> e.getMessage());
 			}
 	});
 	
@@ -57,7 +57,7 @@ public class AddEntryLootModifier extends LootModifier {
 				return DataResult.success(entry);
 			}catch(JsonSyntaxException e) {
 				LootModifierManager.LOGGER.warn("Unable to decode function", e);
-				return DataResult.error(e.getMessage());
+				return DataResult.error(() -> e.getMessage());
 			}
 		},
 		function -> {
@@ -66,7 +66,7 @@ public class AddEntryLootModifier extends LootModifier {
 				return DataResult.success(new Dynamic<>(JsonOps.INSTANCE, element));
 			}catch(JsonSyntaxException e) {
 				LootModifierManager.LOGGER.warn("Unable to encode function", e);
-				return DataResult.error(e.getMessage());
+				return DataResult.error(() -> e.getMessage());
 			}
 	});
 

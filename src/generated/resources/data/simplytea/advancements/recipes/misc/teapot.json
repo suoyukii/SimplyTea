@@ -1,0 +1,35 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_the_recipe": {
+      "conditions": {
+        "recipe": "simplytea:teapot"
+      },
+      "trigger": "minecraft:recipe_unlocked"
+    },
+    "has_unfired": {
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "simplytea:unfired_teapot"
+            ]
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    }
+  },
+  "requirements": [
+    [
+      "has_unfired",
+      "has_the_recipe"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "simplytea:teapot"
+    ]
+  },
+  "sends_telemetry_event": false
+}

@@ -7,6 +7,7 @@ import knightminer.simplytea.item.TeaCupItem;
 import net.minecraft.advancements.Advancement;
 import net.minecraft.advancements.Advancement.Builder;
 import net.minecraft.core.NonNullList;
+import net.minecraft.core.RegistryAccess;
 import net.minecraft.data.recipes.FinishedRecipe;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
@@ -15,6 +16,7 @@ import net.minecraft.world.inventory.CraftingContainer;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.crafting.CraftingBookCategory;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.item.crafting.ShapelessRecipe;
@@ -31,7 +33,7 @@ public class ShapelessHoneyRecipe extends ShapelessRecipe {
 	private final Ingredient honey;
 	private final String tag;
 	public ShapelessHoneyRecipe(ResourceLocation id, String group, ItemLike tea, Ingredient honey, String tag) {
-		super(id, group, TeaCupItem.withHoney(new ItemStack(tea), tag), NonNullList.of(Ingredient.EMPTY, Ingredient.of(tea), honey));
+		super(id, group, CraftingBookCategory.MISC, TeaCupItem.withHoney(new ItemStack(tea), tag), NonNullList.of(Ingredient.EMPTY, Ingredient.of(tea), honey));
 		this.tea = tea.asItem();
 		this.honey = honey;
 		this.tag = tag;
@@ -59,7 +61,7 @@ public class ShapelessHoneyRecipe extends ShapelessRecipe {
 	}
 
 	@Override
-	public ItemStack assemble(CraftingContainer inv) {
+	public ItemStack assemble(CraftingContainer inv, RegistryAccess registryAccess) {
 		// search the inventory for the tea, copy that for the return
 		for (int i = 0; i < inv.getContainerSize(); i++) {
 			ItemStack stack = inv.getItem(i);
@@ -67,7 +69,7 @@ public class ShapelessHoneyRecipe extends ShapelessRecipe {
 				return TeaCupItem.withHoney(ItemHandlerHelper.copyStackWithSize(stack, 1), tag);
 			}
 		}
-		return getResultItem().copy();
+		return getResultItem(registryAccess).copy();
 	}
 
 	@Override

@@ -1,25 +1,15 @@
-buildscript {
-  repositories {
-    maven { url = 'https://maven.minecraftforge.net' }
-    jcenter()
-    mavenCentral()
-    maven {
-      name "Parchment"
-      url "https://maven.parchmentmc.org"
-    }
-  }
-  dependencies {
-    classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '5.1.+', changing: true
-    classpath 'org.parchmentmc:librarian:1.+'
-  }
+plugins {
+  id 'eclipse'
+  id 'idea'
+  id 'maven-publish'
+  id 'net.minecraftforge.gradle' version '[6.0,6.2)'
+  id 'org.parchmentmc.librarian.forgegradle' version '1.+'
 }
-apply plugin: 'net.minecraftforge.gradle'
-apply plugin: 'eclipse'
-apply plugin: 'maven-publish'
-apply plugin: 'org.parchmentmc.librarian.forgegradle'
 
 group = 'knightminer'
-archivesBaseName = 'simplytea'
+base {
+  archivesName = 'simplytea'
+}
 java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 
 configurations {

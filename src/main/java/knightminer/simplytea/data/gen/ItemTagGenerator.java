@@ -3,17 +3,20 @@ package knightminer.simplytea.data.gen;
 import knightminer.simplytea.SimplyTea;
 import knightminer.simplytea.core.Registration;
 import knightminer.simplytea.data.SimplyTags;
-import net.minecraft.data.tags.BlockTagsProvider;
-import net.minecraft.data.DataGenerator;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.data.PackOutput;
 import net.minecraft.data.tags.ItemTagsProvider;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.ItemTags;
 import net.minecraftforge.common.Tags;
+import net.minecraftforge.common.data.BlockTagsProvider;
 import net.minecraftforge.common.data.ExistingFileHelper;
 
+import java.util.concurrent.CompletableFuture;
+
 public class ItemTagGenerator extends ItemTagsProvider {
-	public ItemTagGenerator(DataGenerator dataGenerator, BlockTagsProvider blockTags, ExistingFileHelper existing) {
-		super(dataGenerator, blockTags, SimplyTea.MOD_ID, existing);
+	public ItemTagGenerator(PackOutput output, BlockTagsProvider blockTags, CompletableFuture<HolderLookup.Provider> lookupProvider, ExistingFileHelper existing) {
+		super(output, lookupProvider, blockTags.contentsGetter(), SimplyTea.MOD_ID, existing);
 	}
 
 	@Override
@@ -22,7 +25,7 @@ public class ItemTagGenerator extends ItemTagsProvider {
 	}
 
 	@Override
-	protected void addTags() {
+	protected void addTags(HolderLookup.Provider provider) {
 		this.tag(Tags.Items.RODS_WOODEN).add(Registration.tea_stick);
 		this.tag(SimplyTags.Items.ICE_CUBES).add(Registration.ice_cube);
 		this.tag(SimplyTags.Items.EXCLUSIVE_TEAS).add(

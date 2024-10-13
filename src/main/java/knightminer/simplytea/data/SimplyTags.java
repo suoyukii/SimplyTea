@@ -1,7 +1,7 @@
 package knightminer.simplytea.data;
 
 import knightminer.simplytea.SimplyTea;
-import net.minecraft.core.Registry;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
@@ -21,11 +21,11 @@ public class SimplyTags {
 
 
 		private static TagKey<Item> tag(String name) {
-			return TagKey.create(Registry.ITEM_REGISTRY, new ResourceLocation(SimplyTea.MOD_ID, name));
+			return TagKey.create(Registries.ITEM, new ResourceLocation(SimplyTea.MOD_ID, name));
 		}
 
 		private static TagKey<Item> forgeTag(String name) {
-			return TagKey.create(Registry.ITEM_REGISTRY, new ResourceLocation("forge", name));
+			return TagKey.create(Registries.ITEM, new ResourceLocation("forge", name));
 		}
 
 		private static void init() {}

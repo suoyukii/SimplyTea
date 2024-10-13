@@ -1,5 +1,6 @@
 {
   "type": "minecraft:crafting_shaped",
+  "category": "misc",
   "key": {
     "s": {
       "item": "simplytea:tea_stick"
@@ -12,5 +13,6 @@
   ],
   "result": {
     "item": "simplytea:tea_fence_gate"
-  }
+  },
+  "show_notification": true
 }

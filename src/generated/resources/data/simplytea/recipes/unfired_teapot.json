@@ -1,5 +1,6 @@
 {
   "type": "minecraft:crafting_shaped",
+  "category": "misc",
   "key": {
     "B": {
       "item": "minecraft:bone_meal"
@@ -14,5 +15,6 @@
   ],
   "result": {
     "item": "simplytea:unfired_teapot"
-  }
+  },
+  "show_notification": true
 }

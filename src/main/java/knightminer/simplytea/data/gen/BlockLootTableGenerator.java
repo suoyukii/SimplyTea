@@ -5,8 +5,9 @@ import knightminer.simplytea.SimplyTea;
 import knightminer.simplytea.block.TeaTrunkBlock;
 import knightminer.simplytea.core.Registration;
 import net.minecraft.advancements.critereon.StatePropertiesPredicate;
-import net.minecraft.data.loot.BlockLoot;
+import net.minecraft.data.loot.BlockLootSubProvider;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.flag.FeatureFlags;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.storage.loot.BuiltInLootTables;
@@ -28,8 +29,12 @@ import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
-public class BlockLootTableGenerator extends BlockLoot {
+public class BlockLootTableGenerator extends BlockLootSubProvider {
 	private final ResourceLocation LEAVES_ID = new ResourceLocation(SimplyTea.MOD_ID, "blocks/tea_leaves");
+
+	protected BlockLootTableGenerator() {
+		super(Set.of(), FeatureFlags.REGISTRY.allFlags());
+	}
 
 	@Nonnull
 	@Override
@@ -40,8 +45,8 @@ public class BlockLootTableGenerator extends BlockLoot {
 	}
 
 	@Override
-	public void accept(BiConsumer<ResourceLocation, Builder> consumer) {
-		this.addTables();
+	public void generate(BiConsumer<ResourceLocation, Builder> consumer) {
+		this.generate();
 		Set<ResourceLocation> set = Sets.newHashSet();
 		for (Block block : getKnownBlocks()) {
 			ResourceLocation name = block.getLootTable();
@@ -70,7 +75,7 @@ public class BlockLootTableGenerator extends BlockLoot {
 	}
 
 	@Override
-	protected void addTables() {
+	protected void generate() {
 		// basic
 		dropSelf(Registration.tea_fence);
 		dropSelf(Registration.tea_fence_gate);

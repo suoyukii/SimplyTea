@@ -68,7 +68,7 @@ public class TeaTreeFeature extends Feature<NoneFeatureConfiguration> {
 	 */
 	private static void setBlockSafe(LevelAccessor world, BlockPos pos, BlockState state) {
 		BlockState old = world.getBlockState(pos);
-		if(old.isAir() || old.getMaterial().isReplaceable() || old.is(BlockTags.LEAVES)) {
+		if(old.isAir() || old.canBeReplaced() || old.is(BlockTags.LEAVES)) {
 			world.setBlock(pos, state, 3);
 		}
 	}

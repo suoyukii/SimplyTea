@@ -8,6 +8,7 @@ import knightminer.simplytea.data.gen.ItemTagGenerator;
 import knightminer.simplytea.data.gen.LootTableGenerator;
 import knightminer.simplytea.data.gen.RecipeGenerator;
 import knightminer.simplytea.data.gen.ShapelessHoneyRecipe;
+import knightminer.simplytea.data.gen.WorldgenGenerator;
 import knightminer.simplytea.item.CocoaItem;
 import knightminer.simplytea.item.HotTeapotItem;
 import knightminer.simplytea.item.TeaCupItem;
@@ -23,19 +24,22 @@ import knightminer.simplytea.potion.RestfulEffect;
 import knightminer.simplytea.worldgen.TeaTreeFeature;
 import knightminer.simplytea.worldgen.TeaTreeGrower;
 import knightminer.simplytea.worldgen.TreeGenEnabledPlacement;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Holder;
-import net.minecraft.core.Registry;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.core.cauldron.CauldronInteraction;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.data.DataGenerator;
+import net.minecraft.data.PackOutput;
 import net.minecraft.data.worldgen.features.FeatureUtils;
 import net.minecraft.data.worldgen.placement.PlacementUtils;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.CreativeModeTab;
+import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeSerializer;
@@ -46,47 +50,37 @@ import net.minecraft.world.level.block.FenceBlock;
 import net.minecraft.world.level.block.FenceGateBlock;
 import net.minecraft.world.level.block.FireBlock;
 import net.minecraft.world.level.block.FlowerPotBlock;
-import net.minecraft.world.level.block.SaplingBlock;
 import net.minecraft.world.level.block.LayeredCauldronBlock;
+import net.minecraft.world.level.block.SaplingBlock;
 import net.minecraft.world.level.block.SoundType;
-import net.minecraft.world.level.levelgen.blockpredicates.BlockPredicate;
+import net.minecraft.world.level.block.state.properties.NoteBlockInstrument;
+import net.minecraft.world.level.block.state.properties.WoodType;
 import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
 import net.minecraft.world.level.levelgen.feature.Feature;
 import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConfiguration;
-import net.minecraft.world.level.levelgen.placement.BiomeFilter;
-import net.minecraft.world.level.levelgen.placement.BlockPredicateFilter;
-import net.minecraft.world.level.levelgen.placement.InSquarePlacement;
 import net.minecraft.world.level.levelgen.placement.PlacedFeature;
 import net.minecraft.world.level.levelgen.placement.PlacementModifierType;
-import net.minecraft.world.level.levelgen.placement.RarityFilter;
-import net.minecraft.world.level.material.Material;
-import net.minecraft.world.level.material.MaterialColor;
+import net.minecraft.world.level.material.MapColor;
+import net.minecraft.world.level.material.PushReaction;
 import net.minecraftforge.common.data.ExistingFileHelper;
+import net.minecraftforge.common.world.BiomeModifier;
 import net.minecraftforge.data.event.GatherDataEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.registries.ForgeRegistries;
-import net.minecraftforge.registries.IForgeRegistry;
-import net.minecraftforge.registries.ObjectHolder;
 import net.minecraftforge.registries.RegisterEvent;
 import net.minecraftforge.registries.RegisterEvent.RegisterHelper;
 
-import javax.annotation.Nonnull;
-import java.util.List;
 import java.util.Objects;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 
 @SuppressWarnings("unused")
 @EventBusSubscriber(modid = SimplyTea.MOD_ID, bus = EventBusSubscriber.Bus.MOD)
 public class Registration {
   /* Creative tab */
-  public static CreativeModeTab group = new CreativeModeTab("simplytea") {
-    @Override
-    public ItemStack makeIcon() {
-      return new ItemStack(tea_leaf);
-    }
-  };
+  public static CreativeModeTab group;
 
   /* Potions */
   public static MobEffect restful;
@@ -141,8 +135,9 @@ public class Registration {
   public static Feature<NoneFeatureConfiguration> tea_tree;
 
   public static RecipeSerializer<?> shapeless_honey;
-  public static Holder<ConfiguredFeature<NoneFeatureConfiguration,?>> configured_tea_tree;
-  public static Holder<PlacedFeature> placed_tea_tree;
+  public static ResourceKey<ConfiguredFeature<?,?>> configured_tea_tree = FeatureUtils.createKey(SimplyTea.MOD_ID + ":tea_tree");
+  public static ResourceKey<PlacedFeature> placed_tea_tree = PlacementUtils.createKey(SimplyTea.MOD_ID + ":tea_tree");
+  public static ResourceKey<BiomeModifier> tea_tree_biome_modifier = ResourceKey.create(ForgeRegistries.Keys.BIOME_MODIFIERS, new ResourceLocation(SimplyTea.MOD_ID, "tea_tree"));
 
   @SubscribeEvent
   static void registerObjects(final RegisterEvent event) {    
@@ -157,23 +152,23 @@ public class Registration {
     event.register(ForgeRegistries.Keys.BLOCKS, r -> {
 	  Block.Properties props;
 
-	  props = Block.Properties.of(Material.WOOD).strength(2.0F, 3.0F).sound(SoundType.WOOD);
+	  props = Block.Properties.of().mapColor(MapColor.WOOD).ignitedByLava().instrument(NoteBlockInstrument.BASS).strength(2.0F, 3.0F).sound(SoundType.WOOD);
 	  tea_fence = register(r, new FenceBlock(props), "tea_fence");
-	  tea_fence_gate = register(r, new FenceGateBlock(props), "tea_fence_gate");
+	  tea_fence_gate = register(r, new FenceGateBlock(props, WoodType.OAK), "tea_fence_gate");
 
-	  props = Block.Properties.of(Material.PLANT).noCollission().randomTicks().strength(0).sound(SoundType.GRASS);
+	  props = Block.Properties.of().mapColor(MapColor.PLANT).pushReaction(PushReaction.DESTROY).noCollission().randomTicks().strength(0).sound(SoundType.GRASS);
 	  tea_sapling = register(r, new SaplingBlock(new TeaTreeGrower(), props), "tea_sapling");
 
-	  props = Block.Properties.of(Material.WOOD, MaterialColor.COLOR_BROWN).strength(2.0F).sound(SoundType.WOOD).randomTicks();
+	  props = Block.Properties.of().mapColor(MapColor.COLOR_BROWN).ignitedByLava().instrument(NoteBlockInstrument.BASS).mapColor(MapColor.COLOR_BROWN).strength(2.0F).sound(SoundType.WOOD).randomTicks();
 	  tea_trunk = register(r, new TeaTrunkBlock(props), "tea_trunk");
 
-	  props = Block.Properties.of(Material.DECORATION).strength(0f).noOcclusion();
+	  props = Block.Properties.of().pushReaction(PushReaction.DESTROY).strength(0f).noOcclusion();
 	  potted_tea_sapling = register(r, new FlowerPotBlock(() -> (FlowerPotBlock) Blocks.FLOWER_POT, () -> tea_sapling, props), "potted_tea_sapling");
 	  ((FlowerPotBlock)Blocks.FLOWER_POT).addPlant(new ResourceLocation(SimplyTea.MOD_ID, "tea_sapling"), () -> potted_tea_sapling);
 	});
     
     event.register(ForgeRegistries.Keys.ITEMS, r -> {
-      Item.Properties props = new Item.Properties().tab(group);
+      Item.Properties props = new Item.Properties();
 
       // crafting
       tea_leaf = register(r, new TooltipItem(props), "tea_leaf");
@@ -195,7 +190,7 @@ public class Registration {
       registerBlockItem(r, new BlockItem(tea_sapling, props));
 
       // teapots
-      props = new Item.Properties().tab(group).stacksTo(16);
+      props = new Item.Properties().stacksTo(16);
       unfired_teapot = register(r, new Item(props), "unfired_teapot");
       teapot = register(r, new TeapotItem(props), "teapot");
       // teacups
@@ -211,7 +206,7 @@ public class Registration {
       teapot_frothed = register(r, new HotTeapotItem(props), "teapot_frothed");
 
       // drinks
-      props = new Item.Properties().tab(group).stacksTo(1).durability(2).setNoRepair().craftRemainder(cup);
+      props = new Item.Properties().stacksTo(1).durability(2).setNoRepair().craftRemainder(cup);
       cup_tea_black = register(r, new TeaCupItem(props.food(Config.SERVER.black_tea)), "cup_tea_black");
       cup_tea_green = register(r, new TeaCupItem(props.food(Config.SERVER.green_tea)), "cup_tea_green");
       cup_tea_floral = register(r, new TeaCupItem(props.food(Config.SERVER.floral_tea)), "cup_tea_floral");
@@ -219,6 +214,18 @@ public class Registration {
       cup_tea_iced = register(r, new TeaCupItem(props.food(Config.SERVER.iced_tea)), "cup_tea_iced");
       cup_tea_chorus = register(r, new TeaCupItem(props.food(Config.SERVER.chorus_tea)), "cup_tea_chorus");
       cup_cocoa = register(r, new CocoaItem(props.food(Config.SERVER.cocoa)), "cup_cocoa");
+    });
+
+    event.register(Registries.CREATIVE_MODE_TAB, r -> {
+      group = register(r, CreativeModeTab.builder()
+              .icon(() -> new ItemStack(tea_leaf))
+              .withTabsBefore(CreativeModeTabs.SPAWN_EGGS)
+              .title(Component.translatable("itemGroup.simplytea"))
+              .displayItems((displayParameters, output) -> {
+                ForgeRegistries.ITEMS.getValues().stream()
+                        .filter(item -> ForgeRegistries.ITEMS.getKey(item).getNamespace().equals(SimplyTea.MOD_ID))
+                        .forEach(output::accept);
+              }).build(), "simplytea");
     });
     
     event.register(ForgeRegistries.Keys.FEATURES, r -> {
@@ -232,6 +239,10 @@ public class Registration {
     event.register(ForgeRegistries.Keys.RECIPE_SERIALIZERS, r -> {
 	  shapeless_honey = register(r, new ShapelessHoneyRecipe.Serializer(), "shapeless_honey");
 	});
+
+    event.register(Registries.PLACEMENT_MODIFIER_TYPE, r -> {
+      tree_gen_enabled = register(r, () -> TreeGenEnabledPlacement.CODEC, "tree_gen_enabled");
+    });
   }
 
   @SubscribeEvent
@@ -261,16 +272,6 @@ public class Registration {
         return InteractionResult.PASS;
       });
     });
-
-    // configured features
-    tree_gen_enabled = Registry.register(Registry.PLACEMENT_MODIFIERS, new ResourceLocation(SimplyTea.MOD_ID, "tree_gen_enabled"), () -> TreeGenEnabledPlacement.CODEC);
-    configured_tea_tree = FeatureUtils.register(SimplyTea.MOD_ID + ":tea_tree", tea_tree, NoneFeatureConfiguration.INSTANCE);
-    placed_tea_tree = PlacementUtils.register(SimplyTea.MOD_ID + ":tea_tree", configured_tea_tree, List.of(
-        TreeGenEnabledPlacement.INSTANCE,
-        RarityFilter.onAverageOnceEvery(128), InSquarePlacement.spread(), PlacementUtils.HEIGHTMAP_WORLD_SURFACE, BiomeFilter.biome(),
-        BlockPredicateFilter.forPredicate(BlockPredicate.wouldSurvive(tea_sapling.defaultBlockState(), BlockPos.ZERO)),
-        PlacementUtils.filteredByBlockSurvival(tea_sapling)
-    ));
   }
 
   @SubscribeEvent
@@ -278,11 +279,14 @@ public class Registration {
     if (event.includeServer()) {
       ExistingFileHelper existing = event.getExistingFileHelper();
       DataGenerator generator = event.getGenerator();
-      BlockTagGenerator blockTags = new BlockTagGenerator(generator, existing);
+      PackOutput output = generator.getPackOutput();
+      CompletableFuture<HolderLookup.Provider> lookupProvider = event.getLookupProvider();
+      BlockTagGenerator blockTags = new BlockTagGenerator(output, lookupProvider, existing);
       generator.addProvider(event.includeServer(), blockTags);
-      generator.addProvider(event.includeServer(), new ItemTagGenerator(generator, blockTags, existing));
-      generator.addProvider(event.includeServer(), new RecipeGenerator(generator));
-      generator.addProvider(event.includeServer(), new LootTableGenerator(generator));
+      generator.addProvider(event.includeServer(), new ItemTagGenerator(output, blockTags, lookupProvider, existing));
+      generator.addProvider(event.includeServer(), new RecipeGenerator(output));
+      generator.addProvider(event.includeServer(), new LootTableGenerator(output));
+      generator.addProvider(event.includeServer(), new WorldgenGenerator(output, lookupProvider, Set.of(SimplyTea.MOD_ID)));
     }
   }
   

@@ -8,7 +8,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.storage.loot.LootContext;
+import net.minecraft.world.level.storage.loot.LootParams;
 import net.minecraft.world.level.storage.loot.LootTable;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParamSets;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
@@ -31,14 +31,14 @@ public final class Util {
      * @return  List of block drops
      */
     public static List<ItemStack> getBlockLoot(BlockState state, ServerLevel world, BlockPos pos, @Nullable Player player, ItemStack tool, ResourceLocation location) {
-        LootContext.Builder builder = new LootContext.Builder(world)
+        LootParams.Builder builder = new LootParams.Builder(world)
             .withParameter(LootContextParams.ORIGIN, Vec3.atCenterOf(pos))
             .withParameter(LootContextParams.BLOCK_STATE, state)
             .withOptionalParameter(LootContextParams.BLOCK_ENTITY, world.getBlockEntity(pos))
             .withOptionalParameter(LootContextParams.THIS_ENTITY, player)
             .withParameter(LootContextParams.TOOL, tool);
-        LootContext context = builder.create(LootContextParamSets.BLOCK);
-        LootTable table = world.getServer().getLootTables().get(location);
+        LootParams context = builder.create(LootContextParamSets.BLOCK);
+        LootTable table = world.getServer().getLootData().getLootTable(location);
         return table.getRandomItems(context);
     }
 }

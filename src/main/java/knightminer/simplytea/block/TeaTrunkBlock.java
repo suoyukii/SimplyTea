@@ -5,7 +5,6 @@ import knightminer.simplytea.core.Config;
 import knightminer.simplytea.core.Registration;
 import knightminer.simplytea.core.Util;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.NonNullList;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
@@ -15,7 +14,6 @@ import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.ShearsItem;
@@ -131,9 +129,6 @@ public class TeaTrunkBlock extends Block {
 	protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
 		builder.add(TYPE, CLIPPED);
 	}
-
-	@Override
-	public void fillItemCategory(CreativeModeTab group, NonNullList<ItemStack> items) {}
 
 	public static enum TrunkType implements StringRepresentable {
 		STUMP,
